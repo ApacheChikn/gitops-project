@@ -1,7 +1,7 @@
 variable "name" {
     description = "name to used"
-    type = string
-    default = "gitops"
+    type = set(string)
+    default = (["gitops", "gitops2"])
   
 }
 
