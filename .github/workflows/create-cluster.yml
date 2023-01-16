@@ -30,17 +30,23 @@ jobs:
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v1
     - run: |-
-        set -f
-        set -- $(gcloud container clusters list | grep -v 'NAME' | awk '{print $1}')
-        export GKE_CLUSTER=("$@")
-        set -- $(gcloud container clusters list | grep -v 'NAME' | awk '{print $2}')
-        export GKE_ZONE=("$@")
+       #!/bin/bash
 
-        gcloud components install gke-gcloud-auth-plugin
+       
+       clusters=($(gcloud container clusters list --format='value(name)'))
+       zones=($(gcloud container clusters list --format='value(zone)'))
 
-        gcloud components update kubectl
+       for i in "${!clusters[@]}"; do
+         export GKE_CLUSTER="${clusters[i]}"
+         export GKE_ZONE="${zones[i]}"
+ 
+         gcloud components install gke-gcloud-auth-plugin
+         gcloud components update kubectl
+         gcloud container clusters get-credentials "$GKE_CLUSTER" --zone "$GKE_ZONE"
+       done
 
-        gcloud container clusters get-credentials "$GKE_CLUSTER" --zone "$GKE_ZONE"
+
+
 
     - name: Install Argo CD
       run: bash  ../scripts/install-argocd.sh
